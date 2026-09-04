@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>College Library Catalog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ledger-green: #28303d;
+        --ledger-green-dark: #142720;
+        --parchment: #f3ecdb;
+        --parchment-dim: #ece2c9;
+        --ink: #24211a;
+        --brass: #a9803f;
+        --brass-light: #c9a668;
+        --available: #3f6b45;
+        --borrowed: #9c4a3a;
+        --rule: rgba(36, 33, 26, 0.16);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--parchment);
+        color: var(--ink);
+        font-family: "Source Sans 3", sans-serif;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: "Fraunces", serif;
+        font-weight: 600;
+        margin: 0;
+        color: var(--ledger-green-dark);
+      }
+      header {
+        background: var(--ledger-green);
+        color: #fff;
+        padding: 36px 24px 28px;
+      }
+      .wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.4px;
+        color: var(--brass-light);
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      header h1 {
+        color: #fff;
+        font-size: 32px;
+        margin-bottom: 8px;
+      }
+      header p {
+        color: #d7ddd4;
+        max-width: 520px;
+        font-size: 15px;
+        margin: 0;
+      }
+      .controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 28px 0 24px;
+      }
+      .controls input,
+      .controls select {
+        padding: 10px 12px;
+        border: 1px solid var(--rule);
+        border-radius: 3px;
+        font-size: 14px;
+        background: #fff;
+        font-family: inherit;
+      }
+      .controls input {
+        flex: 1 1 260px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+        padding-bottom: 60px;
+      }
+      .card {
+        border: 1px solid var(--rule);
+        border-radius: 3px;
+        padding: 18px 20px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .card .unit {
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        color: var(--brass);
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .card h3 {
+        font-size: 18px;
+        line-height: 1.3;
+      }
+      .card .author {
+        margin: 4px 0 0;
+        color: #5a5648;
+        font-size: 14px;
+      }
+      .card .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 10px;
+        border-top: 1px solid var(--rule);
+      }
+      .badge {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .badge.avail {
+        color: var(--available);
+      }
+      .badge.borrowed {
+        color: var(--borrowed);
+      }
+      .btn {
+        padding: 7px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 3px;
+        border: 1px solid var(--ledger-green);
+        background: var(--ledger-green);
+        color: #fff;
+        cursor: pointer;
+      }
+      .empty {
+        color: #8b8672;
+        padding: 20px 0;
+      }
+      /* modal */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(20, 39, 32, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 50;
+      }
+      .overlay.open {
+        display: flex;
+      }
+      .modal {
+        background: #fff;
+        border-radius: 4px;
+        max-width: 440px;
+        width: 100%;
+        padding: 28px 28px 24px;
+      }
+      .field {
+        margin-bottom: 12px;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        color: #8b8672;
+        margin-bottom: 4px;
+      }
+      .field input:not([type="checkbox"]) {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--rule);
+        border-radius: 3px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+      .field input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        margin: 0;
+        accent-color: var(--ledger-green);
+        flex-shrink: 0;
+      }
+      .field .readonly {
+        padding: 8px 10px;
+        background: var(--parchment-dim);
+        border-radius: 3px;
+        font-size: 14px;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 18px;
+      }
+      .btn-secondary {
+        padding: 9px 16px;
+        border-radius: 3px;
+        border: 1px solid var(--rule);
+        background: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-primary {
+        padding: 9px 16px;
+        border-radius: 3px;
+        border: none;
+        background: var(--ledger-green);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .msg {
+        font-size: 14px;
+        margin-top: 10px;
+      }
+      .msg.error {
+        color: var(--borrowed);
+      }
+      .msg.success {
+        color: var(--available);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <!-- LOGO: place a file named logo.png (or logo.svg) in the same
+         folder as this index.html when you deploy. Adjust height below
+         to fit your logo's proportions. -->
+        <div style="display: flex; gap: 10px">
+          <img
+            src="spi.png"
+            alt="SPI logo"
+            style="height: 36px; margin-bottom: 14px; display: block"
+            onerror="this.style.display = 'none'"
+          />
+          <img
+            src="site.png"
+            alt="SITE logo"
+            style="height: 36px; margin-bottom: 14px; display: block"
+            onerror="this.style.display = 'none'"
+          />
+        </div>
+        <div class="eyebrow">Browse the book</div>
+        <h1>SPI & SITE Library</h1>
+        <p>
+          Search and browse freely. To borrow a book, click Borrow and fill in
+          your student details.
+        </p>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="controls">
+        <input
+          id="search"
+          type="text"
+          placeholder="Search by title, author, or unit code…"
+        />
+        <select id="genreFilter">
+          <option value="">All genres</option>
+        </select>
+      </div>
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2 style="font-size: 20px; margin-bottom: 18px">Request to borrow</h2>
+        <form id="borrowForm">
+          <div class="field">
+            <label>Book</label>
+            <div class="readonly" id="mTitle"></div>
+          </div>
+          <div class="field">
+            <label>ISBN</label>
+            <div class="readonly" id="mIsbn"></div>
+          </div>
+          <div class="field">
+            <label>College email</label
+            ><input
+              type="email"
+              id="mEmail"
+              required
+              placeholder="SPI or SITE email only"
+            />
+          </div>
+          <div class="field">
+            <label>Student ID</label
+            ><input
+              type="text"
+              id="mStudentId"
+              required
+              placeholder="SPI123456"
+            />
+          </div>
+          <div class="field">
+            <label>Full name</label
+            ><input type="text" id="mName" required placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label>Phone number</label
+            ><input
+              type="tel"
+              id="mPhone"
+              required
+              placeholder="e.g. 0400 000 000"
+            />
+          </div>
+
+          <!-- AGREEMENT TEXT: edit the <ul> items below whenever your policy changes -->
+          <div
+            class="field"
+            style="
+              background: var(--parchment-dim);
+              padding: 12px 14px;
+              border-radius: 3px;
+            "
+          >
+            <label style="margin-bottom: 6px">Before you submit</label>
+            <ul
+              style="
+                margin: 0 0 10px;
+                padding-left: 18px;
+                font-size: 13px;
+                color: #4a4739;
+                line-height: 1.5;
+              "
+            >
+              <li>
+                Library staff will confirm the availability of the book and
+                arrange a collection time with you by email within five business
+                days.
+              </li>
+              <li>
+                When collecting the book, you must bring your student ID card or
+                another form of photo identification, such as a passport.
+              </li>
+              <li>
+                You are responsible for taking proper care of the borrowed book
+                and returning it by the due date.
+              </li>
+              <li>
+                You may be liable for any loss, damage, or applicable charges
+                associated with the book.
+              </li>
+            </ul>
+            <label
+              style="
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                font-size: 13px;
+                color: var(--ink);
+                cursor: pointer;
+              "
+            >
+              <input
+                type="checkbox"
+                id="mAgree"
+                required
+                style="margin-top: 2px"
+              />
+              <span>I have read and agree to the above.</span>
+            </label>
+          </div>
+
+          <div id="formMsg"></div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal()">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary" id="submitBtn">
+              Submit request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // ---- CONFIGURATION ----
+      // The Web3Forms access key is NOT here anymore - it lives server-side
+      // in a Vercel serverless function (api/submit.js), read from a
+      // Vercel environment variable. This file is safe to keep in a
+      // public GitHub repo.
+
+      // Only these email domains are allowed to submit a borrow request.
+      // Add/remove domains here (keep the @ and lowercase).
+      const ALLOWED_EMAIL_DOMAINS = [
+        "@stud.spi.nsw.edu.au",
+        "@stud.siti.nsw.edu.au",
+      ];
+
+      const BOOKS = [
+        {
+          title: "A Tour of C++ (Second edition)",
+          author: "Bjarne Stroustrup",
+          genre: "Programming",
+          isbn: "9780134997834",
+          year: 2018,
+          unit: "",
+        },
+        {
+          title:
+            "Accounting: Business Reporting for Decision Making, 9th Edition",
+          author:
+            "Jacqueline Birt, Keryn Chalmers, Suzanne Maloney Albie Brooks, Judy Oliver, David Bond",
+          genre: "",
+          isbn: "9781394333943",
+          year: 2026,
+          unit: "MBA501",
+        },
+        {
+          title: "Artificial Intelligence: A Modern Approach (2nd edition)",
+          author: "S. Russell, P. Norvig",
+          genre: "Artificial Intelligence",
+          isbn: "9788120323827",
+          year: 2003,
+          unit: "MDS620",
+        },
+        {
+          title: "Artificial Intelligence: A Modern Approach (4th edition)",
+          author: "S. Russell, P. Norvig",
+          genre: "Artificial Intelligence",
+          isbn: "9780130803023",
+          year: 2020,
+          unit: "MDS620",
+        },
+        {
+          title: "Australasian Business Statistics (4th Edition)",
+          author:
+            "Black, Asafu-Adjaye, Burke, Khan, King, Perera, Papadimos, et al.",
+          genre: "",
+          isbn: "9780730312932",
+          year: 2015,
+          unit: "",
+        },
+        {
+          title: "Beginning Mobile Application Development in the Cloud",
+          author: "R. Rodger",
+          genre: "Cloud Computing",
+          isbn: "9781118034699",
+          year: 2011,
+          unit: "MDS615",
+        },
+        {
+          title: "Beginning Programming",
+          author: "A. Kingsley-Hughes, K. Kingsley-Hughes",
+          genre: "Programming",
+          isbn: "9780764584060",
+          year: 2005,
+          unit: "MDS601, COM212",
+        },
+        {
+          title: "Business Research Methods (6th Edition)",
+          author: "Emma Bell, Alan Bryman, Bill Harley",
+          genre: "Research Methods",
+          isbn: "9780198869443",
+          year: 2022,
+          unit: "",
+        },
+        {
+          title: "Cloud Computing: An Introduction",
+          author: "R. Chopra",
+          genre: "Cloud Computing",
+          isbn: "9781683920922",
+          year: 2017,
+          unit: "MDS615",
+        },
+        {
+          title: "Communications of the ACM Vol. 66 No.  5 (August 2023) - ",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title:
+            "Communications of the ACM Vol. 66 No. 10 (October 2023) - Beyond Deep fakes",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title:
+            "Communications of the ACM Vol. 66 No. 11 (November 2023) - Scrambled Features for Breakfast: Agile",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "9798400707926",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title:
+            "Communications of the ACM Vol. 66 No. 12 (December 2023) - Data Analyticcs anyhwere and everywhere",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "9798400708558",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title: "Communications of the ACM Vol. 66 No. 4 (April 2023) - ",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title: "Communications of the ACM Vol. 66 No. 6 (August 2023) - ",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "9781450398114",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title: "Communications of the ACM Vol. 66 No. 7 (July 2023) - ",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "9798400707797",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title: "Communications of the ACM Vol. 66 No. 8 (August 2023) - ",
+          author: "Various",
+          genre: "Magazine",
+          isbn: "9798400707384",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title: "Computer Architecture: A Quantitative Approach (4th Edition)",
+          author: "David A Patterson and John L. Hennessy",
+          genre: "Computer Architecture",
+          isbn: "9780123704900",
+          year: 2006,
+          unit: "",
+        },
+        {
+          title: "Computer Architecture: A Quantitative Approach (5th Edition)",
+          author: "David A Patterson and John L. Hennessy",
+          genre: "Computer Architecture",
+          isbn: "9780123838728",
+          year: 2012,
+          unit: "",
+        },
+        {
+          title: "Computer Architecture: A Quantitative Approach (6th Edition)",
+          author: "David A Patterson and John L. Hennessy",
+          genre: "Computer Architecture",
+          isbn: "9780128119051",
+          year: 2017,
+          unit: "COM122",
+        },
+        {
+          title:
+            "Computer Organization and Design Risc-V Edition: The Hardware Software Interface",
+          author: "David A Patterson, John L Hennessy",
+          genre: "Computer Design",
+          isbn: "9780128203316",
+          year: 2020,
+          unit: "COM122",
+        },
+        {
+          title:
+            "Concise Computer Vision: An Introduction into Theory and Algorithms",
+          author: "R. Klette",
+          genre: "Computer Vision",
+          isbn: "9781447163190",
+          year: 2014,
+          unit: "MDS613",
+        },
+        {
+          title: "Course in Electromagnetic Field",
+          author: "Sw Anwane",
+          genre: "Electromagnetic",
+          isbn: "9788183330862",
+          year: 1992,
+          unit: "",
+        },
+        {
+          title:
+            "Cracking the Coding Interview, 6th Edition: 189 Programming Questions and Solutions",
+          author: "Gayle Laakmann McDowell",
+          genre: "Programming",
+          isbn: "9780984782857",
+          year: 2015,
+          unit: "",
+        },
+        {
+          title:
+            "Data Mining: Concepts, Models, Methods, and Algorithms (2nd Edition)",
+          author: "M. Kantardzic",
+          genre: "Data Mining",
+          isbn: "9780470890455",
+          year: 2011,
+          unit: "MDS605",
+        },
+        {
+          title: "Data Science",
+          author: "John D. Kelleher",
+          genre: "Data Science",
+          isbn: "9780262535434",
+          year: 2018,
+          unit: "",
+        },
+        {
+          title: "Database System Concepts (6th Edition)",
+          author: "A. Silberschatz, H. Korth, S. Sudarshan",
+          genre: "Database Systems",
+          isbn: "9780071289597",
+          year: 2010,
+          unit: "MDS604",
+        },
+        {
+          title:
+            "Database Systems: A Practical Approach to Design, Implementation, and Management",
+          author: "Thomas Connolly & Carolyn Begg",
+          genre: "Database Systems",
+          isbn: "9789353438913",
+          year: 2019,
+          unit: "",
+        },
+        {
+          title: "Database Systems: Design, Implementation, & Management",
+          author: "Carlos Coronel & Steven Morris",
+          genre: "Database Systems",
+          isbn: "9781337627900",
+          year: 2018,
+          unit: "",
+        },
+        {
+          title:
+            "Database Tuning: Principles, Experiments, and Troubleshooting Techniques (The Morgan Kaufmann Series in Data Management Systems)",
+          author: "Dennis Shasha, Philippe Bonnet ",
+          genre: "Database Systems",
+          isbn: "9781558607538",
+          year: 2002,
+          unit: "",
+        },
+        {
+          title: "Deep Learning",
+          author: "I. Goodfellow, Y. Bengio, A. Courvill",
+          genre: "Deep Learning",
+          isbn: "9780262035613",
+          year: 2016,
+          unit: "MDS613",
+        },
+        {
+          title:
+            "Deep Learning for Computer Vision: Expert techniques to train advanced neural networks using TensorFlow and Keras",
+          author: "R. Shanmugamani",
+          genre: "Deep Learning",
+          isbn: "9781788295628",
+          year: 2018,
+          unit: "MDS613",
+        },
+        {
+          title:
+            "Deep Learning with JavaScript: Neural Networks in TensorFlow.js",
+          author: "Stanley Bileschi, Eric Nielsen and Shanqing Cai",
+          genre: "Deep Learning",
+          isbn: "9781617296178",
+          year: 2020,
+          unit: "MDS613",
+        },
+        {
+          title: "Distributed Algorithms",
+          author: "Nancy A. Lynch",
+          genre: "Algorithms",
+          isbn: "9781558603486",
+          year: 1996,
+          unit: "",
+        },
+        {
+          title:
+            "Elements of Programming Interviews in Python: The Insiders' Guide",
+          author: "Tsung-Hsien Lee, Amit Prakash, Adnan Aziz",
+          genre: "Python Programming",
+          isbn: "9781537713946",
+          year: 2016,
+          unit: "",
+        },
+        {
+          title: "Essential Math for Data Science",
+          author: "Thomas Nield",
+          genre: "Data Science",
+          isbn: "9781098102937",
+          year: 2022,
+          unit: "MDS602",
+        },
+        {
+          title: "Fundamentals of Database Systems (7th Edition)",
+          author: "R. Elmasri, S. Navathe",
+          genre: "Database Systems",
+          isbn: "9781292097619",
+          year: 2016,
+          unit: "MDS604",
+        },
+        {
+          title: "Gaussian Processes for Machine Learning",
+          author: "C. E. Rasmussen, C. K. I. Williams",
+          genre: "Machine Learning",
+          isbn: "9780262182539",
+          year: 2006,
+          unit: "MDS620",
+        },
+        {
+          title: "Hadoop Essentials",
+          author: "S. Achari",
+          genre: "Big Data",
+          isbn: "9781784390464",
+          year: 2015,
+          unit: "MDS612",
+        },
+        {
+          title: "Implementing and Developing Cloud Computing Applications",
+          author: "D. E. Y. Sarna",
+          genre: "Cloud Computing",
+          isbn: "9781439830833",
+          year: 2010,
+          unit: "MDS615",
+        },
+        {
+          title: "Intercultural Communication: A Contextual Approach",
+          author: "James W. Neuliep",
+          genre: "",
+          isbn: "9781544348704",
+          year: 2020,
+          unit: "",
+        },
+        {
+          title:
+            "Introduction to Algorithms for Data Mining and Machine Learning",
+          author: "X. S. Yang",
+          genre: "Data Mining, Machine Learning",
+          isbn: "9780128172162",
+          year: 2019,
+          unit: "MDS605",
+        },
+        {
+          title:
+            "Introduction to Applied Linear Algebra: Vectors, Matrices, and Least Squares",
+          author: "Stephen Boyd & Lieven Vandenberghe",
+          genre: "",
+          isbn: "9781316518960",
+          year: 2018,
+          unit: "",
+        },
+        {
+          title: "Introduction to Artificial Intelligence (3rd Edition)",
+          author: "P. C. Jackson",
+          genre: "Artificial Intelligence",
+          isbn: "9780486832869",
+          year: 2019,
+          unit: "",
+        },
+        {
+          title: "Introduction to Computation and Programming using Python",
+          author: "John V. Guttag",
+          genre: "Python Programming",
+          isbn: "9780262525008",
+          year: 2013,
+          unit: "MDS601",
+        },
+        {
+          title: "Introduction to Reliable Distributed Programming",
+          author: "Rachid Guerraoui, Lu\u00eds Rodrigues",
+          genre: "Programming",
+          isbn: "9783540288459",
+          year: 2006,
+          unit: "",
+        },
+        {
+          title: "Introductory Business Statistics",
+          author: "A. Holmes, B. Illowsky, S. Dean",
+          genre: "Business Statistics",
+          isbn: "9781680920970",
+          year: 2017,
+          unit: "MDS602",
+        },
+        {
+          title:
+            "Learning PySpark: Build data-intensive applications locally and deploy at scale using the combined powers of Python and Spark 2.0",
+          author: "T. Drabas, D. Lee",
+          genre: "Big Data",
+          isbn: "9781786463708",
+          year: 2017,
+          unit: "MDS612",
+        },
+        {
+          title: "Logic: A Very Short Introduction (2nd Edition)",
+          author: "Priest",
+          genre: "",
+          isbn: "9780198811701",
+          year: 2001,
+          unit: "",
+        },
+        {
+          title: "Machine Learning: A Probabilistic Perspective",
+          author: "K. P. Murphy",
+          genre: "Machine Learning",
+          isbn: "9780262018029",
+          year: 2012,
+          unit: "MDS605",
+        },
+        {
+          title:
+            "Mastering Software Project Requirements: A Framework for Successful Planning, Development & Alignment",
+          author: "B. Davis",
+          genre: "Software Engineering",
+          isbn: "9781604270914",
+          year: 2013,
+          unit: "MDS650",
+        },
+        {
+          title: "Modern Database Management, Global Edition (12th Edition)",
+          author: "J. Hoffer, R. Venkataraman, H. Topi",
+          genre: "Database Systems",
+          isbn: "9781292101859",
+          year: 2016,
+          unit: "",
+        },
+        {
+          title:
+            "Modern VIM: Craft Your Development Environment with VIM 8 and Neovim",
+          author: "Drew Neil",
+          genre: "",
+          isbn: "9781680502626",
+          year: 2018,
+          unit: "",
+        },
+        {
+          title: "Practical Research: Planning and Design",
+          author: "Paul D. Leedy, Jeanne Ellis Ormrod ",
+          genre: "",
+          isbn: "9781292021171",
+          year: 2013,
+          unit: "",
+        },
+        {
+          title:
+            "Practical Vim: Edit Text at the Speed of Thought (2nd Edition)",
+          author: "Drew Neil",
+          genre: "",
+          isbn: "9781680501278",
+          year: 2017,
+          unit: "",
+        },
+        {
+          title:
+            "Probability and Computing: Randomized Algorithms and Probabilistic Analysis",
+          author: "Michael Mitzenmacher, Eli Upfal",
+          genre: "",
+          isbn: "9780521835404",
+          year: 2005,
+          unit: "",
+        },
+        {
+          title:
+            "Programming Arduino: Getting Started with Sketches (2nd Edition)",
+          author: "Simon Monk ",
+          genre: "Programming",
+          isbn: "9781259641633",
+          year: 2016,
+          unit: "",
+        },
+        {
+          title: "Programming Language Pragmatics (2nd Edition)",
+          author: "Michael Scott",
+          genre: "Programming",
+          isbn: "9780126339512",
+          year: 2006,
+          unit: "",
+        },
+        {
+          title: "Programming, Problem Solving, and Abstraction with C",
+          author: "Alistair Moffat",
+          genre: "Programming",
+          isbn: "9781741030808",
+          year: 2003,
+          unit: "",
+        },
+        {
+          title:
+            "Project Management: A Systems Approach to Planning, Scheduling, and Controlling (11th Edition)",
+          author: "H. Kerzner, H. R. Kerzner",
+          genre: "Project Management",
+          isbn: "9781118022276",
+          year: 2013,
+          unit: "MDS620",
+        },
+        {
+          title:
+            "Projects in Computing and Information Systems: A Student's Guide",
+          author: "C. W. Dawson",
+          genre: "Project Management",
+          isbn: "9781292073460",
+          year: 2005,
+          unit: "MDS650",
+        },
+        {
+          title: "Proof in Mathematics: An Introduction",
+          author: "James Franklin & Albert Daoud",
+          genre: "",
+          isbn: "9780646545097",
+          year: 2012,
+          unit: "",
+        },
+        {
+          title: "Qualitative Research Design for Software Users",
+          author: "G. S. Di, J. Davidson",
+          genre: "Research Methods",
+          isbn: "9780335225217",
+          year: 2008,
+          unit: "MDS650",
+        },
+        {
+          title:
+            "Quantitative Methodologies using Multi-Methods\nModels for Social Science and Information Technology Research",
+          author: "Sergey Samoilenko, Kweku-Muata Osei-Bryson",
+          genre: "",
+          isbn: "9781032046976",
+          year: 2023,
+          unit: "",
+        },
+        {
+          title:
+            "Storytelling with Data: A Data Visualization Guide for Business Professionals",
+          author: "Cole Nussbaumer Knaflic",
+          genre: "Data Visualization",
+          isbn: "9781119002253",
+          year: 2015,
+          unit: "MDS611",
+        },
+        {
+          title: "The Art of Multiprocessor Programming, Revised Reprint",
+          author: "Maurice Herlihy (Author), Nir Shavit",
+          genre: "Programming",
+          isbn: "9780123973375",
+          year: 2012,
+          unit: "",
+        },
+        {
+          title: "The Business Communication Handbook",
+          author: "Judith Dwyer",
+          genre: "",
+          isbn: "9780170419499",
+          year: 2019,
+          unit: "",
+        },
+        {
+          title:
+            "The Elements of Computing Systems: Building a Modern Computer from First Principles (second edition)",
+          author: "Noam Nisan & Shimon Schocken",
+          genre: "",
+          isbn: "9780262539807",
+          year: 2021,
+          unit: "",
+        },
+        {
+          title: "Think Like a Data Scientist",
+          author: "Brian Godsey",
+          genre: "Data Science",
+          isbn: "9781633430273",
+          year: 2017,
+          unit: "",
+        },
+        {
+          title: "tmux 2 Productive Mouse-Free Development",
+          author: "Brian P. Hogan",
+          genre: "",
+          isbn: "9781680502213",
+          year: 2018,
+          unit: "",
+        },
+        {
+          title: "Visual Thinking for Design",
+          author: "Colin Ware",
+          genre: "Data Visualization",
+          isbn: "9780123708960",
+          year: 2008,
+          unit: "MDS611",
+        },
+        {
+          title:
+            "Visualize This: The Flowing Data Guide to Design, Visualization, and Statistics",
+          author: "Nathan Yau",
+          genre: "Data Visualization",
+          isbn: "9780470944882",
+          year: 2011,
+          unit: "MDS611",
+        },
+      ];
+
+      const grid = document.getElementById("grid");
+      const searchInput = document.getElementById("search");
+      const genreFilter = document.getElementById("genreFilter");
+
+      // populate genre dropdown
+      const genres = [
+        ...new Set(BOOKS.map((b) => b.genre).filter(Boolean)),
+      ].sort();
+      genres.forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        genreFilter.appendChild(opt);
+      });
+
+      function render() {
+        const q = searchInput.value.trim().toLowerCase();
+        const g = genreFilter.value;
+        const filtered = BOOKS.filter((b) => {
+          const matchesQ =
+            !q ||
+            b.title.toLowerCase().includes(q) ||
+            b.author.toLowerCase().includes(q) ||
+            (b.unit || "").toLowerCase().includes(q);
+          const matchesG = !g || b.genre === g;
+          return matchesQ && matchesG;
+        });
+        grid.innerHTML = "";
+        if (filtered.length === 0) {
+          grid.innerHTML = '<p class="empty">No books match your search.</p>';
+          return;
+        }
+        filtered.forEach((b) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+        <div>
+          <div class="unit">${b.unit || "General collection"}</div>
+          <h3>${escapeHtml(b.title)}</h3>
+          <p class="author">${escapeHtml(b.author)}${b.year ? " · " + b.year : ""}</p>
+        </div>
+        <div class="footer" style="justify-content:flex-end;">
+          <button class="btn" data-title="${escapeAttr(b.title)}" data-isbn="${escapeAttr(b.isbn)}">Borrow</button>
+        </div>
+      `;
+          grid.appendChild(card);
+        });
+      }
+
+      function escapeHtml(s) {
+        return (s || "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      function escapeAttr(s) {
+        return escapeHtml(s);
+      }
+
+      searchInput.addEventListener("input", render);
+      genreFilter.addEventListener("change", render);
+      render();
+
+      // ---- Modal ----
+      const overlay = document.getElementById("overlay");
+      const form = document.getElementById("borrowForm");
+      const formMsg = document.getElementById("formMsg");
+      const submitBtn = document.getElementById("submitBtn");
+
+      grid.addEventListener("click", (e) => {
+        if (
+          e.target.tagName === "BUTTON" &&
+          e.target.dataset.title !== undefined
+        ) {
+          document.getElementById("mTitle").textContent =
+            e.target.dataset.title;
+          document.getElementById("mIsbn").textContent =
+            e.target.dataset.isbn || "—";
+          form.reset();
+          formMsg.innerHTML = "";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit request";
+          overlay.classList.add("open");
+        }
+      });
+
+      function closeModal() {
+        overlay.classList.remove("open");
+      }
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) closeModal();
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        formMsg.innerHTML = "";
+
+        const email = document
+          .getElementById("mEmail")
+          .value.trim()
+          .toLowerCase();
+        const emailOk = ALLOWED_EMAIL_DOMAINS.some((domain) =>
+          email.endsWith(domain),
+        );
+        if (!emailOk) {
+          formMsg.innerHTML =
+            '<p class="msg error">Please use your college student email (' +
+            ALLOWED_EMAIL_DOMAINS.join(" or ") +
+            ").</p>";
+          return;
+        }
+
+        if (!document.getElementById("mAgree").checked) {
+          formMsg.innerHTML =
+            '<p class="msg error">Please tick the agreement box before submitting.</p>';
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting…";
+
+        const payload = {
+          book_title: document.getElementById("mTitle").textContent,
+          book_isbn: document.getElementById("mIsbn").textContent,
+          student_email: document.getElementById("mEmail").value,
+          student_id: document.getElementById("mStudentId").value,
+          student_name: document.getElementById("mName").value,
+          student_phone: document.getElementById("mPhone").value,
+        };
+
+        try {
+          const res = await fetch("/api/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (data.success) {
+            formMsg.innerHTML =
+              '<p class="msg success">Request sent! The library admin will follow up by email once approved.</p>';
+            submitBtn.style.display = "none";
+          } else {
+            formMsg.innerHTML =
+              '<p class="msg error">' +
+              (data.message || "Something went wrong. Please try again.") +
+              "</p>";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit request";
+          }
+        } catch (err) {
+          formMsg.innerHTML =
+            '<p class="msg error">Could not send the request. Check your connection and try again.</p>';
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit request";
+        }
+      });
+    </script>
+  </body>
+</html>

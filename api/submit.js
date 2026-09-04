@@ -36,7 +36,11 @@ export default async function handler(req, res) {
   try {
     const web3formsRes = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "User-Agent": "college-library-site/1.0",
+      },
       body: JSON.stringify({
         access_key: accessKey,
         subject: "Library Borrow Request: " + book_title,
@@ -50,7 +54,26 @@ export default async function handler(req, res) {
       }),
     });
 
-    const data = await web3formsRes.json();
+    const rawText = await web3formsRes.text();
+
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      // Web3Forms didn't return JSON - log enough to diagnose without
+      // dumping the whole page (could be a Cloudflare/error page).
+      console.error(
+        "Web3Forms returned non-JSON. Status:",
+        web3formsRes.status,
+        "Body snippet:",
+        rawText.slice(0, 300)
+      );
+      return res.status(502).json({
+        success: false,
+        message: `Web3Forms returned an unexpected response (status ${web3formsRes.status}). Check Vercel function logs for details.`,
+      });
+    }
+
     return res.status(web3formsRes.ok ? 200 : 502).json(data);
   } catch (err) {
     console.error("Web3Forms request failed:", err);

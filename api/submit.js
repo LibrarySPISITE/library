@@ -53,6 +53,7 @@ export default async function handler(req, res) {
     const data = await web3formsRes.json();
     return res.status(web3formsRes.ok ? 200 : 502).json(data);
   } catch (err) {
+    console.error("Web3Forms request failed:", err);
     return res.status(502).json({ success: false, message: "Could not reach Web3Forms." });
   }
 }

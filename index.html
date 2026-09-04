@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SPI & SITE Library</title>
+    <title>College Library Catalog</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -394,10 +394,11 @@
 
     <script>
       // ---- CONFIGURATION ----
-      // The Web3Forms access key is NOT here anymore - it lives server-side
-      // in a Vercel serverless function (api/submit.js), read from a
-      // Vercel environment variable. This file is safe to keep in a
-      // public GitHub repo.
+      // Web3Forms' own docs confirm this key is safe to keep client-side
+      // on the free plan - server-side calls actually get blocked with a
+      // 403 unless you're on a paid plan with IP whitelisting. So this
+      // lives here in the page, which is how the service is designed to work.
+      const WEB3FORMS_ACCESS_KEY = "9f8a4479-940c-45ab-add1-93f596308d9f";
 
       // Only these email domains are allowed to submit a borrow request.
       // Add/remove domains here (keep the @ and lowercase).
@@ -1139,10 +1140,21 @@
           return;
         }
 
+        if (WEB3FORMS_ACCESS_KEY === "PASTE_YOUR_WEB3FORMS_ACCESS_KEY_HERE") {
+          formMsg.innerHTML =
+            '<p class="msg error">Setup needed: add your Web3Forms access key in index.html before this form can send requests.</p>';
+          return;
+        }
+
         submitBtn.disabled = true;
         submitBtn.textContent = "Submitting…";
 
         const payload = {
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject:
+            "Library Borrow Request: " +
+            document.getElementById("mTitle").textContent,
+          from_name: "SPI and SITE Library",
           book_title: document.getElementById("mTitle").textContent,
           book_isbn: document.getElementById("mIsbn").textContent,
           student_email: document.getElementById("mEmail").value,
@@ -1152,7 +1164,7 @@
         };
 
         try {
-          const res = await fetch("/api/submit", {
+          const res = await fetch("https://api.web3forms.com/submit", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
